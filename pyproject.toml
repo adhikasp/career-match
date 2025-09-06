@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "career-match"
+version = "0.1.0"
+description = "Streamlit Career Match Evaluator"
+authors = ["Adhika Setya Pramudita <adhika.setya.p@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.9.8"
+streamlit = "1.37.1"
+requests = "^2.31"
+python-dotenv = "^1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
