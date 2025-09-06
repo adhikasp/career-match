@@ -53,7 +53,6 @@ def call_openrouter(
     job_description: str,
     misc_criteria: str,
     model: str = DEFAULT_MODEL,
-    temperature: float = 0.2,
     request_timeout_seconds: int = 60,
 ) -> Dict[str, Any]:
     """Call OpenRouter chat completion with a structured prompt for job match analysis.
@@ -97,7 +96,9 @@ def call_openrouter(
 
     payload = {
         "model": model,
-        "temperature": temperature,
+        "reasoning": {
+            "effort": "medium",
+        },
         "messages": [
             {"role": "system", "content": system_message},
             {"role": "user", "content": user_message},
@@ -183,7 +184,6 @@ def main() -> None:
                 "OpenRouter model to use (e.g., 'openrouter/auto', 'anthropic/claude-3.5-sonnet', 'openai/gpt-4o-mini')."
             ),
         )
-        temperature = st.slider("Temperature", min_value=0.0, max_value=1.0, value=0.2, step=0.05)
         api_key = st.text_input(
             label="OpenRouter API Key",
             value=st.session_state.api_key,
@@ -236,7 +236,6 @@ def main() -> None:
                 job_description=job_description,
                 misc_criteria=misc_criteria,
                 model=model.strip() or DEFAULT_MODEL,
-                temperature=float(temperature),
             )
 
             # Save user data for persistence
