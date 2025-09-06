@@ -10,11 +10,12 @@ import streamlit as st
 DATA_FILE = "career_match_data.json"
 
 
-def save_user_data(resume_text: str, misc_criteria: str) -> None:
+def save_user_data(resume_text: str, misc_criteria: str, api_key: str = "") -> None:
     """Save user data to a JSON file for persistence."""
     data = {
         "resume_text": resume_text,
         "misc_criteria": misc_criteria,
+        "api_key": api_key,
     }
     try:
         with open(DATA_FILE, "w", encoding="utf-8") as f:
@@ -33,19 +34,15 @@ def load_user_data() -> Dict[str, str]:
                 return {
                     "resume_text": data.get("resume_text", ""),
                     "misc_criteria": data.get("misc_criteria", ""),
+                    "api_key": data.get("api_key", ""),
                 }
     except Exception:
         # Silently fail if we can't load - return defaults
         pass
-    return {"resume_text": "", "misc_criteria": ""}
+    return {"resume_text": "", "misc_criteria": "", "api_key": ""}
 
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
-
-OPENROUTER_API_KEY_ENV = "OPENROUTER_API_KEY"
+# OpenRouter API key is now managed through the UI
 DEFAULT_MODEL = "openrouter/sonoma-dusk-alpha"
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
@@ -173,6 +170,8 @@ def main() -> None:
         st.session_state.resume_text = persisted_data["resume_text"]
     if "misc_criteria" not in st.session_state:
         st.session_state.misc_criteria = persisted_data["misc_criteria"]
+    if "api_key" not in st.session_state:
+        st.session_state.api_key = persisted_data["api_key"]
 
     with st.sidebar:
         st.subheader("Settings")
@@ -185,11 +184,15 @@ def main() -> None:
             ),
         )
         temperature = st.slider("Temperature", min_value=0.0, max_value=1.0, value=0.2, step=0.05)
-        api_key = os.getenv(OPENROUTER_API_KEY_ENV, "")
+        api_key = st.text_input(
+            label="OpenRouter API Key",
+            value=st.session_state.api_key,
+            type="password",
+            help="Enter your OpenRouter API key. Get one from https://openrouter.ai",
+            key="api_key",
+        )
         if not api_key:
-            st.warning(
-                f"Set environment variable {OPENROUTER_API_KEY_ENV} to call the API. You can create a .env file."
-            )
+            st.warning("Please enter your OpenRouter API key to use the application.")
 
     col1, col2 = st.columns(2)
     with col1:
@@ -223,7 +226,7 @@ def main() -> None:
             st.error("Please paste the job description.")
             return
         if not api_key:
-            st.error(f"Missing {OPENROUTER_API_KEY_ENV}. Set it in your environment or .env file.")
+            st.error("Please enter your OpenRouter API key in the sidebar.")
             return
 
         with st.spinner("Analyzing match with the LLM..."):
@@ -237,8 +240,8 @@ def main() -> None:
             )
 
             # Save user data for persistence
-            if resume_text.strip() or misc_criteria.strip():
-                save_user_data(resume_text, misc_criteria)
+            if resume_text.strip() or misc_criteria.strip() or api_key.strip():
+                save_user_data(resume_text, misc_criteria, api_key)
 
         if not result.get("ok"):
             st.error(result.get("error") or "Unknown error")
